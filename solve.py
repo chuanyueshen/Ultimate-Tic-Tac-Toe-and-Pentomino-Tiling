@@ -30,7 +30,7 @@ def solve(board, pents):
         pents_map[get_pent_label(p)] = get_all_mutations(p)
 
     # get the result board first
-    _, res_board = dfs(board, board.shape, dict(pents_map))
+    _, res_board = dfs(board, board.shape, dict(pents_map), [0])
     print(res_board)
 
     # use the board to determine the final layout to return
@@ -62,14 +62,19 @@ def in_bound(board_shape, x, y):
     return 0 <= x < board_shape[0] and 0 <= y < board_shape[1]
 
 
-def dfs(board, board_shape, pents_map):
+def dfs(board, board_shape, pents_map, num_call):
+    num_call[0] += 1
+
     if not pents_map:
+        print("The number of times to call DFS function:")
+        print(num_call[0])
         return True, board
 
     for x, y in ((x, y) for y in range(board_shape[1]) for x in range(board_shape[0])):
         # find the the first unfilled position to add a pent
         if board[x][y] == 0:
-            # try all the rest pents one by one
+            # try all the rest pents one by one, first select the one with the smallest number of mutations (LRV)
+            # for p, mutations in sorted(pents_map.items(), key=lambda x: len(x[1]), reverse=False):
             for p, mutations in pents_map.items():
                 # try all the mutations of a pent
                 for mutation in mutations:
@@ -95,7 +100,8 @@ def dfs(board, board_shape, pents_map):
                     for x_move, y_move in mutation:
                         new_board[x + x_move][y + y_move] = p
 
-                    found, res_board = dfs(new_board, board_shape, new_pents_map)
+                    # this search mechanism has the ability of forward checking
+                    found, res_board = dfs(new_board, board_shape, new_pents_map, num_call)
 
                     if found:
                         return True, res_board
