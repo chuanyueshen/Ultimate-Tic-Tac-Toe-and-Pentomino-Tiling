@@ -7,15 +7,25 @@ class ultimateTicTacToe:
         """
         Initialization of the game.
         """
-        self.board=[['_','_','_','_','_','_','_','_','_'],
-                    ['_','_','_','_','_','_','_','_','_'],
-                    ['_','_','_','_','_','_','_','_','_'],
-                    ['_','_','_','_','_','_','_','_','_'],
-                    ['_','_','_','_','_','_','_','_','_'],
-                    ['_','_','_','_','_','_','_','_','_'],
-                    ['_','_','_','_','_','_','_','_','_'],
-                    ['_','_','_','_','_','_','_','_','_'],
-                    ['_','_','_','_','_','_','_','_','_']]
+        # self.board=[['_','_','_','_','_','_','_','_','_'],
+        #             ['_','_','_','_','_','_','_','_','_'],
+        #             ['_','_','_','_','_','_','_','_','_'],
+        #             ['_','_','_','_','_','_','_','_','_'],
+        #             ['_','_','_','_','_','_','_','_','_'],
+        #             ['_','_','_','_','_','_','_','_','_'],
+        #             ['_','_','_','_','_','_','_','_','_'],
+        #             ['_','_','_','_','_','_','_','_','_'],
+        #             ['_','_','_','_','_','_','_','_','_']]
+
+        self.board = [['X', '_', 'O', '_', '_', '_', '_', '_', '_'],
+                      ['_', '_', '_', '_', '_', '_', '_', '_', '_'],
+                      ['O', '_', 'X', '_', '_', '_', '_', '_', '_'],
+                      ['_', '_', '_', 'X', '_', '_', '_', '_', '_'],
+                      ['_', '_', '_', 'X', '_', '_', '_', '_', '_'],
+                      ['_', '_', '_', 'X', '_', '_', '_', '_', '_'],
+                      ['_', '_', '_', '_', '_', '_', '_', '_', '_'],
+                      ['_', '_', '_', '_', '_', '_', '_', '_', '_'],
+                      ['_', '_', '_', '_', '_', 'O', 'O', 'O', 'O']]
         self.maxPlayer='X'
         self.minPlayer='O'
         self.maxDepth=3
@@ -97,7 +107,28 @@ class ultimateTicTacToe:
                      Return -1 if miniPlayer is the winner.
         """
         #YOUR CODE HERE
-        winner=0
+        for x, y in self.globalIdx:
+            if self.board[x][y] == self.board[x + 1][x + 1] == self.board[x + 2][y + 2] \
+             or self.board[x][y + 2] == self.board[x + 1][x + 1] == self.board[x + 2][y]:
+                if self.board[x + 1][y + 1] == 'X':
+                    return 1
+                elif self.board[x + 1][y + 1] == 'O':
+                    return -1
+
+            for row in range(3):
+                if self.board[x + row][y] == self.board[x + row][y + 1] == self.board[x + row][y + 2]:
+                    if self.board[x + row][y] == 'X':
+                        return 1
+                    elif self.board[x + row][y] == 'O':
+                        return -1
+
+            for column in range(3):
+                if self.board[x][y + column] == self.board[x + 1][y + column] == self.board[x + 2][y + column]:
+                    if self.board[x][y + column] == 'X':
+                        return 1
+                    elif self.board[x][y + column] == 'O':
+                        return -1
+
         return 0
 
     def alphabeta(self,depth,currBoardIdx,alpha,beta,isMax):
@@ -190,6 +221,8 @@ class ultimateTicTacToe:
 
 if __name__=="__main__":
     uttt=ultimateTicTacToe()
+    uttt.printGameBoard()
+    print(uttt.checkWinner())
     gameBoards, bestMove, expandedNodes, bestValue, winner=uttt.playGamePredifinedAgent(True,False,False)
     if winner == 1:
         print("The winner is maxPlayer!!!")
