@@ -7,25 +7,16 @@ class ultimateTicTacToe:
         """
         Initialization of the game.
         """
-        # self.board=[['_','_','_','_','_','_','_','_','_'],
-        #             ['_','_','_','_','_','_','_','_','_'],
-        #             ['_','_','_','_','_','_','_','_','_'],
-        #             ['_','_','_','_','_','_','_','_','_'],
-        #             ['_','_','_','_','_','_','_','_','_'],
-        #             ['_','_','_','_','_','_','_','_','_'],
-        #             ['_','_','_','_','_','_','_','_','_'],
-        #             ['_','_','_','_','_','_','_','_','_'],
-        #             ['_','_','_','_','_','_','_','_','_']]
+        self.board=[['_','_','_','_','_','_','_','_','_'],
+                    ['_','_','_','_','_','_','_','_','_'],
+                    ['_','_','_','_','_','_','_','_','_'],
+                    ['_','_','_','_','_','_','_','_','_'],
+                    ['_','_','_','_','_','_','_','_','_'],
+                    ['_','_','_','_','_','_','_','_','_'],
+                    ['_','_','_','_','_','_','_','_','_'],
+                    ['_','_','_','_','_','_','_','_','_'],
+                    ['_','_','_','_','_','_','_','_','_']]
 
-        self.board = [['X', '_', 'O', '_', '_', '_', '_', '_', '_'],
-                      ['_', '_', '_', '_', '_', '_', '_', '_', '_'],
-                      ['O', '_', 'X', '_', '_', '_', '_', '_', '_'],
-                      ['_', '_', '_', 'X', '_', '_', '_', '_', '_'],
-                      ['_', '_', '_', 'X', '_', '_', '_', '_', '_'],
-                      ['_', '_', '_', 'X', '_', '_', '_', '_', '_'],
-                      ['_', '_', '_', '_', '_', '_', '_', '_', '_'],
-                      ['_', '_', '_', '_', '_', '_', '_', '_', '_'],
-                      ['_', '_', '_', '_', '_', 'O', 'O', 'O', 'O']]
         self.maxPlayer='X'
         self.minPlayer='O'
         self.maxDepth=3
@@ -58,6 +49,59 @@ class ultimateTicTacToe:
         print('\n'.join([' '.join([str(cell) for cell in row]) for row in self.board[3:6]])+'\n')
         print('\n'.join([' '.join([str(cell) for cell in row]) for row in self.board[6:9]])+'\n')
 
+    def two_in_row(self, isMax):
+        """
+        :return: the number of unblocked two-in-row for the player
+                 and the number of blocked two-in-row for the opponent
+        """
+        mine, yours = 'O', 'X'
+        mine_unblocked, yours_blocked = 0, 0
+
+        if isMax:
+            mine, yours = yours, mine
+
+        for x, y in self.globalIdx:
+            diagonals, rows, columns = list(), list(), list()
+
+            diagonals.append([self.board[x][y], self.board[x + 1][x + 1], self.board[x + 2][y + 2]])
+            diagonals.append([self.board[x][y + 2], self.board[x + 1][x + 1], self.board[x + 2][y]])
+
+            for row in range(3):
+                rows.append([self.board[x + row][y], self.board[x + row][y + 1], self.board[x + row][y + 2]])
+
+            for column in range(3):
+                columns.append([self.board[x][y + column], self.board[x + 1][y + column], self.board[x + 2][y + column]])
+
+            for line in diagonals + rows + columns:
+                if line.count(mine) == 2 and line.count(yours) == 0:
+                    mine_unblocked += 1
+                if line.count(yours) == 2 and line.count(mine) == 1:
+                    yours_blocked += 1
+
+        return mine_unblocked, yours_blocked
+
+    def corner_taken(self, isMax):
+        if isMax:
+            mine = 'X'
+        else:
+            mine = 'O'
+
+        num_corner_taken = 0
+
+        for x, y in self.globalIdx:
+            if self.board[x][y] == mine:
+                num_corner_taken += 1
+
+            if self.board[x + 2][y] == mine:
+                num_corner_taken += 1
+
+            if self.board[x][y + 2] == mine:
+                num_corner_taken += 1
+
+            if self.board[x + 2][y + 2] == mine:
+                num_corner_taken += 1
+
+        return num_corner_taken
 
     def evaluatePredifined(self, isMax):
         """
@@ -69,9 +113,24 @@ class ultimateTicTacToe:
         score(float): estimated utility score for maxPlayer or minPlayer
         """
         #YOUR CODE HERE
-        score=0
-        return score
+        if isMax:
+            if self.checkWinner() == 1:
+                return self.winnerMaxUtility
 
+            mine_unblocked, yours_blocked = self.two_in_row(isMax)
+            if mine_unblocked or yours_blocked:
+                return mine_unblocked * self.twoInARowMaxUtility + yours_blocked * self.preventThreeInARowMaxUtility
+
+            return self.corner_taken(isMax) * self.cornerMaxUtility
+        else:
+            if self.checkWinner() == -1:
+                return self.winnerMinUtility
+
+            mine_unblocked, yours_blocked = self.two_in_row(isMax)
+            if mine_unblocked or yours_blocked:
+                return mine_unblocked * self.twoInARowMinUtility + yours_blocked * self.preventThreeInARowMinUtility
+
+            return self.corner_taken(isMax) * self.cornerMinUtility
 
     def evaluateDesigned(self, isMax):
         """
@@ -94,8 +153,7 @@ class ultimateTicTacToe:
                         on the board.
         """
         #YOUR CODE HERE
-        movesLeft=True
-        return movesLeft
+        return any(self.board[x][y] == '_' for x in range(len(self.board)) for y in range(len(self.board[0])))
 
     def checkWinner(self):
         #Return termimnal node status for maximizer player 1-win,0-tie,-1-lose
@@ -221,8 +279,22 @@ class ultimateTicTacToe:
 
 if __name__=="__main__":
     uttt=ultimateTicTacToe()
+    uttt.board = [['X', '_', 'O', '_', '_', '_', '_', '_', '_'],
+                  ['_', '_', '_', '_', '_', '_', '_', '_', '_'],
+                  ['O', '_', 'X', '_', '_', '_', '_', '_', '_'],
+                  ['_', '_', '_', 'X', '_', '_', '_', '_', '_'],
+                  ['_', '_', '_', '_', '_', '_', '_', '_', '_'],
+                  ['_', '_', '_', 'X', '_', '_', '_', '_', '_'],
+                  ['_', '_', '_', '_', '_', '_', '_', '_', '_'],
+                  ['_', '_', '_', '_', '_', '_', '_', '_', '_'],
+                  ['_', '_', '_', '_', '_', 'O', 'O', 'X', 'O']]
     uttt.printGameBoard()
+
     print(uttt.checkWinner())
+    print(uttt.checkMovesLeft())
+    print(uttt.evaluatePredifined(True))
+    print(uttt.evaluatePredifined(False))
+
     gameBoards, bestMove, expandedNodes, bestValue, winner=uttt.playGamePredifinedAgent(True,False,False)
     if winner == 1:
         print("The winner is maxPlayer!!!")
