@@ -222,8 +222,36 @@ class ultimateTicTacToe:
         bestValue(float):the bestValue that current player may have
         """
         #YOUR CODE HERE
-        bestValue=0.0
-        return bestValue
+        self.expandedNodes += 1
+
+        if depth == self.maxDepth:
+            return self.evaluatePredifined(isMax)
+
+        x, y = self.globalIdx[currBoardIdx]
+
+        if (isMax and depth % 2 == 0) or (not isMax and depth % 2 == 1):
+            # the situation where we look for the minimum value
+            curt_move = 'O'
+            curt_best = float('inf')
+        else:
+            curt_move = 'X'
+            curt_best = -float('inf')
+
+        for xd, yd in self.moves:
+            if self.board[x + xd][y + yd] != '_':
+                continue
+
+            self.board[x + xd][y + yd] = curt_move
+            nxt_local_board = xd * 3 + yd
+            new_best = self.minimax(depth + 1, nxt_local_board, isMax)
+            self.board[x + xd][y + yd] = '_'
+
+            if (isMax and depth % 2 == 0) or (not isMax and depth % 2 == 1):
+                curt_best = min(curt_best, new_best)
+            else:
+                curt_best = max(curt_best, new_best)
+
+        return curt_best
 
     def playGamePredifinedAgent(self,maxFirst,isMinimaxOffensive,isMinimaxDefensive):
         """
@@ -355,7 +383,6 @@ if __name__=="__main__":
     print(uttt.checkMovesLeft())
     print(uttt.evaluatePredifined(True))
     print(uttt.evaluatePredifined(False))
-    print(uttt.moves)
     print(uttt.playGamePredifinedAgent(True, True, True))
     uttt.printGameBoard()
 
