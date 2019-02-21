@@ -92,42 +92,22 @@ def dfs(board, board_shape, pents_map, num_call):
 
                     # make copies of board and the rest pents to make backtracking easier
                     new_board = np.array(board)
-                    temp_board = np.array(board)
-                    new_pents_map = dict(pents_map)
-                    
-                    for x_move, y_move in mutation:
-                        temp_board[x + x_move][y + y_move] = p
-                  
-                    #check if there is closed empty cell(s)
-                    if  get_closed_space(x, y, mutation, temp_board, board_shape):
-                        to_continue = True
-                        break
-                    if to_continue:
-                        continue
-                    new_pents_map.pop(p)
-                    new_board = temp_board
 
-                    
+                    new_pents_map = dict(pents_map)
+                    new_pents_map.pop(p)
+
+                    # add the pent to the board
+                    for x_move, y_move in mutation:
+                        new_board[x + x_move][y + y_move] = p
+
                     # this search mechanism has the ability of forward checking
                     found, res_board = dfs(new_board, board_shape, new_pents_map, num_call)
+
                     if found:
                         return True, res_board
 
             return False, board
 
-def get_closed_space(x, y, mutation, new_board, board_shape):
-    closed = False
-    min_x, max_x, min_y, max_y = mutation[0][0], mutation[0][0], mutation[0][1], mutation[0][1]
-    for x_move, y_move in mutation:
-        min_x, max_x = min(min_x, x_move), max(max_x, x_move)
-        min_y, max_y = min(min_y, y_move), max(max_y, y_move)
-    for m, n in ((m,n) for m in range(min_x, max_x) for n in range(min_y, max_y)):
-        if not (m,n) in mutation:
-            if  in_bound(board_shape, m+x, n+y) and (not in_bound(board_shape, m+x-1, n+y) or new_board[m+x-1][n+y] != 0):
-                if  (not in_bound(board_shape, m+x+1, n+y) or new_board[m+x+1][n+y] != 0) and (not in_bound(board_shape, m+x, n+y-1) or new_board[m+x][n+y-1] != 0):
-                    if (not in_bound(board_shape, m+x, n+y+1) or new_board[m+x][n+y+1] != 0):
-                        closed = True
-    return closed   
 
 def get_all_mutations(pent):
     # use a set to remove duplicates
