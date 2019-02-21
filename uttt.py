@@ -222,14 +222,13 @@ class ultimateTicTacToe:
         bestValue(float):the bestValue that current player may have
         """
         #YOUR CODE HERE
-        self.expandedNodes += 1
 
         if depth == self.maxDepth:
             return self.evaluatePredifined(isMax)
 
         x, y = self.globalIdx[currBoardIdx]
 
-        if (isMax and depth % 2 == 0) or (not isMax and depth % 2 == 1):
+        if (isMax and depth % 2 == 1) or (not isMax and depth % 2 == 0):
             # the situation where we look for the minimum value
             curt_move = 'O'
             curt_best = float('inf')
@@ -242,11 +241,12 @@ class ultimateTicTacToe:
                 continue
 
             self.board[x + xd][y + yd] = curt_move
+            self.expandedNodes += 1
             nxt_local_board = xd * 3 + yd
             new_best = self.minimax(depth + 1, nxt_local_board, isMax)
             self.board[x + xd][y + yd] = '_'
 
-            if (isMax and depth % 2 == 0) or (not isMax and depth % 2 == 1):
+            if (isMax and depth % 2 == 1) or (not isMax and depth % 2 == 0):
                 curt_best = min(curt_best, new_best)
             else:
                 curt_best = max(curt_best, new_best)
@@ -314,7 +314,8 @@ class ultimateTicTacToe:
                     continue
 
                 self.board[x + xd][y + yd] = curt_move
-                new_best = curt_algo(0, curt_local_board, isMax)
+                self.expandedNodes += 1
+                new_best = curt_algo(1, xd * 3 + yd, isMax)
                 self.board[x + xd][y + yd] = '_'
 
                 if isMax:
