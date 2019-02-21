@@ -41,6 +41,8 @@ class ultimateTicTacToe:
         self.expandedNodes=0
         self.currPlayer=True
 
+        self.moves = list((x, y) for x in range(3) for y in range(3))
+
     def printGameBoard(self):
         """
         This function prints the current game board.
@@ -63,8 +65,8 @@ class ultimateTicTacToe:
         for x, y in self.globalIdx:
             diagonals, rows, columns = list(), list(), list()
 
-            diagonals.append([self.board[x][y], self.board[x + 1][x + 1], self.board[x + 2][y + 2]])
-            diagonals.append([self.board[x][y + 2], self.board[x + 1][x + 1], self.board[x + 2][y]])
+            diagonals.append([self.board[x][y], self.board[x + 1][y + 1], self.board[x + 2][y + 2]])
+            diagonals.append([self.board[x][y + 2], self.board[x + 1][y + 1], self.board[x + 2][y]])
 
             for row in range(3):
                 rows.append([self.board[x + row][y], self.board[x + row][y + 1], self.board[x + row][y + 2]])
@@ -166,8 +168,8 @@ class ultimateTicTacToe:
         """
         #YOUR CODE HERE
         for x, y in self.globalIdx:
-            if self.board[x][y] == self.board[x + 1][x + 1] == self.board[x + 2][y + 2] \
-             or self.board[x][y + 2] == self.board[x + 1][x + 1] == self.board[x + 2][y]:
+            if self.board[x][y] == self.board[x + 1][y + 1] == self.board[x + 2][y + 2] \
+             or self.board[x][y + 2] == self.board[x + 1][y + 1] == self.board[x + 2][y]:
                 if self.board[x + 1][y + 1] == 'X':
                     return 1
                 elif self.board[x + 1][y + 1] == 'O':
@@ -243,9 +245,68 @@ class ultimateTicTacToe:
         #YOUR CODE HERE
         bestMove=[]
         bestValue=[]
-        gameBoards=[]
         winner=0
-        return gameBoards, bestMove, expandedNodes, bestValue, winner
+
+        isMax = True
+        if not maxFirst:
+            isMax = False
+
+        if isMinimaxOffensive:
+            offensive_algo = self.minimax
+        else:
+            offensive_algo = self.alphabeta
+
+        if isMinimaxDefensive:
+            defensive_algo = self.minimax
+        else:
+            defensive_algo = self.alphabeta
+
+
+        curt_local_board = self.startBoardIdx
+
+        while self.checkMovesLeft():
+            winner = self.checkWinner()
+            if winner:
+                break
+
+            if isMax:
+                curt_move = 'X'
+                curt_algo = offensive_algo
+                curt_best = -float('inf')
+            else:
+                curt_move = 'O'
+                curt_algo = defensive_algo
+                curt_best = float('inf')
+
+            x, y = self.globalIdx[curt_local_board]
+            best_x, best_y = self.globalIdx[curt_local_board]
+
+            for xd, yd in self.moves:
+                if self.board[x + xd][y + yd] != '_':
+                    continue
+
+                self.board[x + xd][y + yd] = curt_move
+                new_best = curt_algo(0, curt_local_board, isMax)
+                self.board[x + xd][y + yd] = '_'
+
+                if isMax:
+                    if new_best > curt_best:
+                        curt_best = new_best
+                        best_x, best_y = x + xd, y + yd
+                else:
+                    if new_best < curt_best:
+                        curt_best = new_best
+                        best_x, best_y = x + xd, y + yd
+
+            self.board[best_x][best_y] = curt_move
+
+            bestMove.append((best_x, best_y))
+            bestValue.append(curt_best)
+
+            isMax = not isMax
+            curt_local_board = (best_x - x) * 3 + (best_y - y)
+
+        return self.board, bestMove, self.expandedNodes, bestValue, winner
 
     def playGameYourAgent(self):
         """
@@ -279,21 +340,24 @@ class ultimateTicTacToe:
 
 if __name__=="__main__":
     uttt=ultimateTicTacToe()
-    uttt.board = [['X', '_', 'O', '_', '_', '_', '_', '_', '_'],
-                  ['_', '_', '_', '_', '_', '_', '_', '_', '_'],
-                  ['O', '_', 'X', '_', '_', '_', '_', '_', '_'],
-                  ['_', '_', '_', 'X', '_', '_', '_', '_', '_'],
-                  ['_', '_', '_', '_', '_', '_', '_', '_', '_'],
-                  ['_', '_', '_', 'X', '_', '_', '_', '_', '_'],
-                  ['_', '_', '_', '_', '_', '_', '_', '_', '_'],
-                  ['_', '_', '_', '_', '_', '_', '_', '_', '_'],
-                  ['_', '_', '_', '_', '_', 'O', 'O', 'X', 'O']]
+    # uttt.board = [['X', '_', '_', '_', '_', '_', '_', '_', '_'],
+    #               ['_', '_', '_', '_', '_', '_', '_', '_', '_'],
+    #               ['O', '_', 'O', '_', '_', '_', '_', '_', '_'],
+    #               ['_', '_', '_', '_', '_', '_', '_', '_', '_'],
+    #               ['_', '_', '_', '_', '_', '_', '_', '_', '_'],
+    #               ['_', '_', '_', 'X', '_', '_', '_', '_', '_'],
+    #               ['_', '_', '_', '_', '_', '_', '_', '_', '_'],
+    #               ['_', '_', '_', '_', '_', '_', '_', 'O', '_'],
+    #               ['_', '_', '_', '_', '_', 'O', 'O', 'X', 'X']]
     uttt.printGameBoard()
 
     print(uttt.checkWinner())
     print(uttt.checkMovesLeft())
     print(uttt.evaluatePredifined(True))
     print(uttt.evaluatePredifined(False))
+    print(uttt.moves)
+    print(uttt.playGamePredifinedAgent(True, True, True))
+    uttt.printGameBoard()
 
     gameBoards, bestMove, expandedNodes, bestValue, winner=uttt.playGamePredifinedAgent(True,False,False)
     if winner == 1:
