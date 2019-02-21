@@ -205,8 +205,43 @@ class ultimateTicTacToe:
         bestValue(float):the bestValue that current player may have
         """
         #YOUR CODE HERE
-        bestValue=0.0
-        return bestValue
+
+        if depth == self.maxDepth:
+            return self.evaluatePredifined(isMax)
+
+        x, y = self.globalIdx[currBoardIdx]
+
+        if (isMax and depth % 2 == 1) or (not isMax and depth % 2 == 0):
+            # the situation where we look for the minimum value
+            curt_move = 'O'
+            curt_best = float('inf')
+        else:
+            curt_move = 'X'
+            curt_best = -float('inf')
+
+        for xd, yd in self.moves:
+            if self.board[x + xd][y + yd] != '_':
+                continue
+
+            self.board[x + xd][y + yd] = curt_move
+            self.expandedNodes += 1
+            nxt_local_board = xd * 3 + yd
+            new_best = self.alphabeta(depth + 1, nxt_local_board, alpha, beta, isMax)
+            self.board[x + xd][y + yd] = '_'
+
+            if (isMax and depth % 2 == 1) or (not isMax and depth % 2 == 0):
+                curt_best = min(curt_best, new_best)
+                if curt_best <= alpha:
+                    return curt_best
+                beta = min(beta, curt_best)
+
+            else:
+                curt_best = max(curt_best, new_best)
+                if curt_best >= beta:
+                    return curt_best
+                alpha = max(alpha, curt_best)
+
+        return curt_best
 
     def minimax(self, depth, currBoardIdx, isMax):
         """
@@ -289,7 +324,6 @@ class ultimateTicTacToe:
         else:
             defensive_algo = self.alphabeta
 
-
         curt_local_board = self.startBoardIdx
 
         while self.checkMovesLeft():
@@ -315,7 +349,11 @@ class ultimateTicTacToe:
 
                 self.board[x + xd][y + yd] = curt_move
                 self.expandedNodes += 1
-                new_best = curt_algo(1, xd * 3 + yd, isMax)
+                if curt_algo == self.minimax:
+                    new_best = curt_algo(1, xd * 3 + yd, isMax)
+                else:
+                    new_best = curt_algo(1, xd * 3 + yd, -float('inf'), float('inf'), isMax)
+
                 self.board[x + xd][y + yd] = '_'
 
                 if isMax:
@@ -387,7 +425,7 @@ if __name__=="__main__":
     print(uttt.playGamePredifinedAgent(True, True, True))
     uttt.printGameBoard()
 
-    gameBoards, bestMove, expandedNodes, bestValue, winner=uttt.playGamePredifinedAgent(True,False,False)
+    gameBoards, bestMove, expandedNodes, bestValue, winner=uttt.playGamePredifinedAgent(True,True,True)
     if winner == 1:
         print("The winner is maxPlayer!!!")
     elif winner == -1:
