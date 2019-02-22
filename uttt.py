@@ -419,13 +419,12 @@ class ultimateTicTacToe:
         """
         #YOUR CODE HERE
         bestMove=[]
-        bestValue=[]
         winner=0
 
         offensive_algo = self.alphabeta
         defensive_algo = self.alphabeta
 
-        self.curt_board_idx = randint(0, 8)
+        curt_board_idx = randint(0, 8)
         isMax = choice([True, False])
 
         if not isMax:
@@ -445,8 +444,8 @@ class ultimateTicTacToe:
                 curt_algo = defensive_algo
                 curt_best = float('inf')
 
-            x, y = self.globalIdx[self.curt_board_idx]
-            best_x, best_y = self.globalIdx[self.curt_board_idx]
+            x, y = self.globalIdx[curt_board_idx]
+            best_x, best_y = self.globalIdx[curt_board_idx]
 
             for xd, yd in self.moves:
                 if self.board[x + xd][y + yd] != '_':
@@ -473,10 +472,9 @@ class ultimateTicTacToe:
             self.board[best_x][best_y] = curt_move
 
             bestMove.append((best_x, best_y))
-            bestValue.append(curt_best)
 
             isMax = not isMax
-            self.curt_board_idx = (best_x - x) * 3 + (best_y - y)
+            curt_board_idx = (best_x - x) * 3 + (best_y - y)
 
             if self.curt_evaluation == self.evaluatePredifined:
                 self.curt_evaluation = self.evaluateDesigned
@@ -502,6 +500,8 @@ class ultimateTicTacToe:
 
 if __name__=="__main__":
     # uttt=ultimateTicTacToe()
+
+
     # # uttt.board = [['X', '_', '_', '_', '_', '_', '_', '_', '_'],
     # #               ['_', '_', '_', '_', '_', '_', '_', '_', '_'],
     # #               ['O', '_', 'O', '_', '_', '_', '_', '_', '_'],
@@ -529,7 +529,7 @@ if __name__=="__main__":
     #     print("The winner is minPlayer!!!")
     # else:
     #     print("Tie. No winner:(")
-    #
+
     win = 0
     print("running")
     for i in range(100):
