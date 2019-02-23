@@ -27,6 +27,9 @@ class ultimateTicTacToe:
         self.startBoardIdx=4
         #self.startBoardIdx=randint(0,8)
         self.curt_board_idx = 0
+        self.box_dict = {0: "Upper Left", 1: "Upper Center", 2: "Upper Right",
+                    3: "Center Left", 4: "Center", 5: "Center Right",
+                    6: "Bottom Left", 7: "Bottom Center", 8: "Bottom Right"}
 
         #utility value for reflex offensive and reflex defensive agents
         self.winnerMaxUtility=10000
@@ -425,6 +428,7 @@ class ultimateTicTacToe:
         """
         #YOUR CODE HERE
         bestMove=[]
+        gameBoards = []
         winner=0
 
         offensive_algo = self.alphabeta
@@ -478,6 +482,7 @@ class ultimateTicTacToe:
             self.board[best_x][best_y] = curt_move
 
             bestMove.append((best_x, best_y))
+            gameBoards.append([row[:] for row in self.board])
 
             isMax = not isMax
             curt_board_idx = (best_x - x) * 3 + (best_y - y)
@@ -487,8 +492,22 @@ class ultimateTicTacToe:
             else:
                 self.curt_evaluation = self.evaluatePredifined
 
-        return self.board, bestMove, winner
+        return gameBoards, bestMove, winner
 
+    def human_input(self, curr_bd_idx):
+        print("Where would you like to place 'X' in the "
+                + self.box_dict[curr_bd_idx] + " local board?")
+        x = int(input("Row = "))
+        y = int(input("Col = "))
+        print("")
+        x_bd, y_bd = self.globalIdx[curr_bd_idx]
+        if (x < 0 or x > 2) or (y < 0 or y > 2):
+            print('Invalid input! Please input 0, 1, or 2.')
+            return self.human_input(curr_bd_idx)
+        if self.board[x_bd + x][y_bd + y] != "_":
+            print('Invalid coordinates! Try again.')
+            return self.human_input(curr_bd_idx)
+        return x_bd + x, y_bd + y, x, y
 
     def playGameHuman(self):
         """
@@ -499,31 +518,41 @@ class ultimateTicTacToe:
         winner(int): 1 for maxPlayer is the winner, -1 for minPlayer is the winner, and 0 for tie.
         """
         #YOUR CODE HERE
-        bestMove = []
-        winner = 0
+        bestMove=[]
+        gameBoards = []
+        winner=0
 
-        offensive_algo = self.alphabeta
-        defensive_algo = self.alphabeta
+
 
         curt_board_idx = randint(0, 8)
         isMax = choice([True, False])
+        players = {True: 'you', False: 'the AI'}
+        self.curt_evaluation = self.evaluatePredifined
 
-        if not isMax:
-            self.curt_evaluation = self.evaluateDesigned
+        print('The initial starting local board is the {} board.'.format(self.box_dict[curt_board_idx]))
+        print('The initial first player is {}.'.format(players[isMax]))
 
         while self.checkMovesLeft():
             winner = self.checkWinner()
+            print('The current local board is the {} board.'.format(self.box_dict[curt_board_idx]))
+            print('The current player is {}.'.format(players[isMax]))
+            print('The current board is:')
+            self.printGameBoard()
+
             if winner:
                 break
 
             if isMax:
-                curt_move = 'X'
-                curt_algo = offensive_algo
-                curt_best = -float('inf')
-            else:
-                curt_move = 'O'
-                curt_algo = defensive_algo
-                curt_best = float('inf')
+                x, y, xd, yd = self.human_input(curt_board_idx)
+                self.board[x][y] = 'X'
+                bestMove.append((x, y))
+                gameBoards.append([row[:] for row in self.board])
+                isMax = not isMax
+                curt_board_idx = xd * 3 + yd
+                continue
+
+            curt_move = 'O'
+            curt_best = float('inf')
 
             x, y = self.globalIdx[curt_board_idx]
             best_x, best_y = self.globalIdx[curt_board_idx]
@@ -534,76 +563,77 @@ class ultimateTicTacToe:
 
                 self.board[x + xd][y + yd] = curt_move
                 self.expandedNodes += 1
-                if curt_algo == self.minimax:
-                    new_best = curt_algo(1, xd * 3 + yd, isMax)
-                else:
-                    new_best = curt_algo(1, xd * 3 + yd, -float('inf'), float('inf'), isMax)
+                new_best = self.alphabeta(1, xd * 3 + yd, -float('inf'), float('inf'), isMax)
 
                 self.board[x + xd][y + yd] = '_'
 
-                if isMax:
-                    if new_best > curt_best:
-                        curt_best = new_best
-                        best_x, best_y = x + xd, y + yd
-                else:
-                    if new_best < curt_best:
-                        curt_best = new_best
-                        best_x, best_y = x + xd, y + yd
+                if new_best < curt_best:
+                    curt_best = new_best
+                    best_x, best_y = x + xd, y + yd
 
             self.board[best_x][best_y] = curt_move
+            print("The AI decided to put {} on coordinates ({}, {}).".format(curt_move, best_x, best_y))
 
             bestMove.append((best_x, best_y))
+            gameBoards.append([row[:] for row in self.board])
 
             isMax = not isMax
             curt_board_idx = (best_x - x) * 3 + (best_y - y)
 
-            if self.curt_evaluation == self.evaluatePredifined:
-                self.curt_evaluation = self.evaluateDesigned
-            else:
-                self.curt_evaluation = self.evaluatePredifined
+        if winner == 0:
+            print('This Game is a Tie!')
+        elif winner == -1:
+            print('Game Over. You Lose!')
+        else:
+            print('Congrats! You Win!')
 
-        return self.board, bestMove, winner
+        return gameBoards, bestMove, winner
+
 
 if __name__=="__main__":
-    uttt=ultimateTicTacToe()
+    # uttt=ultimateTicTacToe()
+    #
+    # #
+    # #
+    # # # uttt.board = [['X', '_', '_', '_', '_', '_', '_', '_', '_'],
+    # # #               ['_', '_', '_', '_', '_', '_', '_', '_', '_'],
+    # # #               ['O', '_', 'O', '_', '_', '_', '_', '_', '_'],
+    # # #               ['_', '_', '_', '_', '_', '_', '_', '_', '_'],
+    # # #               ['_', '_', '_', '_', '_', '_', '_', '_', '_'],
+    # # #               ['_', '_', '_', 'X', '_', '_', '_', '_', '_'],
+    # # #               ['_', '_', '_', '_', '_', '_', '_', '_', '_'],
+    # # #               ['_', '_', '_', '_', '_', '_', '_', 'O', '_'],
+    # # #               ['_', '_', '_', '_', '_', 'O', 'O', 'X', 'X']]
+    # uttt.printGameBoard()
+    #
+    # print(uttt.checkWinner())
+    # print(uttt.checkMovesLeft())
+    # print(uttt.evaluatePredifined(True))
+    # print(uttt.evaluatePredifined(False))
+    # # print(uttt.playGamePredifinedAgent(True, True, True))
     #
     #
-    # # uttt.board = [['X', '_', '_', '_', '_', '_', '_', '_', '_'],
-    # #               ['_', '_', '_', '_', '_', '_', '_', '_', '_'],
-    # #               ['O', '_', 'O', '_', '_', '_', '_', '_', '_'],
-    # #               ['_', '_', '_', '_', '_', '_', '_', '_', '_'],
-    # #               ['_', '_', '_', '_', '_', '_', '_', '_', '_'],
-    # #               ['_', '_', '_', 'X', '_', '_', '_', '_', '_'],
-    # #               ['_', '_', '_', '_', '_', '_', '_', '_', '_'],
-    # #               ['_', '_', '_', '_', '_', '_', '_', 'O', '_'],
-    # #               ['_', '_', '_', '_', '_', 'O', 'O', 'X', 'X']]
-    uttt.printGameBoard()
-
-    print(uttt.checkWinner())
-    print(uttt.checkMovesLeft())
-    print(uttt.evaluatePredifined(True))
-    print(uttt.evaluatePredifined(False))
-    # print(uttt.playGamePredifinedAgent(True, True, True))
-
-
-    gameBoards, bestMove, expandedNodes, bestValue, winner=uttt.playGamePredifinedAgent(True,True,True)
-    print(expandedNodes)
-    print(gameBoards)
-    print(bestMove)
-    print(bestValue)
-    if winner == 1:
-        print("The winner is maxPlayer!!!")
-    elif winner == -1:
-        print("The winner is minPlayer!!!")
-    else:
-        print("Tie. No winner:(")
+    # gameBoards, bestMove, expandedNodes, bestValue, winner=uttt.playGamePredifinedAgent(True,True,True)
+    # print(expandedNodes)
+    # print(gameBoards)
+    # print(bestMove)
+    # print(bestValue)
+    # if winner == 1:
+    #     print("The winner is maxPlayer!!!")
+    # elif winner == -1:
+    #     print("The winner is minPlayer!!!")
+    # else:
+    #     print("Tie. No winner:(")
 
     # win = 0
     # print("running")
-    # for i in range(100):
+    # for i in range(10):
     #     uttt = ultimateTicTacToe()
     #     if uttt.playGameYourAgent()[2] == -1:
     #         win += 1
     #
-    # print("In 100 games, your agent winning times:")
+    # print("In 10 games, your agent winning times:")
     # print(win)
+
+    uttt = ultimateTicTacToe()
+    uttt.playGameHuman()
