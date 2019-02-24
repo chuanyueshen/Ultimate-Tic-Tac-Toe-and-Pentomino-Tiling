@@ -110,6 +110,40 @@ class ultimateTicTacToe:
 
         return num_corner_taken
 
+    def center_taken(self, isMax):
+        if isMax:
+            mine = 'X'
+        else:
+            mine = 'O'
+
+        num_center_taken = 0
+
+        for x, y in self.globalIdx:
+            if self.board[x + 1][y + 1] == mine:
+                num_center_taken += 1
+
+        return num_center_taken
+
+    def side_taken(self, isMax):
+        if isMax:
+            mine = 'X'
+        else:
+            mine = 'O'
+
+        num_side_taken = 0
+
+        for x, y in self.globalIdx:
+            if self.board[x][y + 1] == mine:
+                num_side_taken += 1
+            if self.board[x + 1][y] == mine:
+                num_side_taken += 1
+            if self.board[x + 2][y + 1] == mine:
+                num_side_taken += 1
+            if self.board[x + 1][y + 2] == mine:
+                num_side_taken += 1
+
+        return num_side_taken
+
     def evaluatePredifined(self, isMax):
         """
         This function implements the evaluation function for ultimate tic tac toe for predifined agent.
@@ -160,6 +194,28 @@ class ultimateTicTacToe:
 
         return False
 
+    # def evaluateDesigned(self, isMax):
+    #     """
+    #     This function implements the evaluation function for ultimate tic tac toe for your own agent.
+    #     input args:
+    #     isMax(bool): boolean variable indicates whether it's maxPlayer or minPlayer.
+    #                  True for maxPlayer, False for minPlayer
+    #     output:
+    #     score(float): estimated utility score for maxPlayer or minPlayer
+    #     """
+    #     #YOUR CODE HERE
+    #     if self.checkWinner() == 1:
+    #         return float('inf')
+    #
+    #     if self.checkWinner() == -1:
+    #         return -float('inf')
+    #
+    #     mine_unblocked, yours_blocked = self.two_in_row(isMax)
+    #     if mine_unblocked or yours_blocked:
+    #         return mine_unblocked * (-500) + yours_blocked * (-50)
+    #
+    #     return self.corner_taken(isMax) * (-30)
+
     def evaluateDesigned(self, isMax):
         """
         This function implements the evaluation function for ultimate tic tac toe for your own agent.
@@ -169,18 +225,33 @@ class ultimateTicTacToe:
         output:
         score(float): estimated utility score for maxPlayer or minPlayer
         """
-        #YOUR CODE HERE
+        # YOUR CODE HERE
         if self.checkWinner() == 1:
             return float('inf')
 
         if self.checkWinner() == -1:
             return -float('inf')
 
-        mine_unblocked, yours_blocked = self.two_in_row(isMax)
+        utility = 0
+        # two-in-a-row
+        mine_unblocked, yours_blocked = self.two_in_row(False)
         if mine_unblocked or yours_blocked:
-            return mine_unblocked * (-500) + yours_blocked * (-50)
+            utility -= mine_unblocked * 200 + yours_blocked * 100
 
-        return self.corner_taken(isMax) * (-30)
+        yours_unblocked, mine_blocked = self.two_in_row(True)
+        if mine_unblocked or yours_blocked:
+            utility += yours_unblocked * 200 + mine_blocked * 100
+
+        # corner
+        utility += self.corner_taken(True) * 30 + self.corner_taken(False) * (-30)
+
+        # center
+        utility += self.center_taken(True) * 60 + self.center_taken(False) * (-60)
+
+        # side
+        utility += self.side_taken(True) * 10 + self.side_taken(False) * (-10)
+
+        return utility
 
 
     def checkMovesLeft(self):
@@ -241,6 +312,7 @@ class ultimateTicTacToe:
         bestValue(float):the bestValue that current player may have
         """
         #YOUR CODE HERE
+        self.expandedNodes += 1
 
         if depth == self.maxDepth:
             return self.curt_evaluation(isMax)
@@ -260,7 +332,6 @@ class ultimateTicTacToe:
                 continue
 
             self.board[x + xd][y + yd] = curt_move
-            self.expandedNodes += 1
             nxt_local_board = xd * 3 + yd
             new_best = self.alphabeta(depth + 1, nxt_local_board, alpha, beta, isMax)
             self.board[x + xd][y + yd] = '_'
@@ -293,6 +364,7 @@ class ultimateTicTacToe:
         bestValue(float):the bestValue that current player may have
         """
         #YOUR CODE HERE
+        self.expandedNodes += 1
 
         if depth == self.maxDepth:
             return self.curt_evaluation(isMax)
@@ -312,7 +384,6 @@ class ultimateTicTacToe:
                 continue
 
             self.board[x + xd][y + yd] = curt_move
-            self.expandedNodes += 1
             nxt_local_board = xd * 3 + yd
             new_best = self.minimax(depth + 1, nxt_local_board, isMax)
             self.board[x + xd][y + yd] = '_'
@@ -388,7 +459,6 @@ class ultimateTicTacToe:
                     continue
 
                 self.board[x + xd][y + yd] = curt_move
-                self.expandedNodes += 1
                 if curt_algo == self.minimax:
                     new_best = curt_algo(1, xd * 3 + yd, isMax)
                 else:
@@ -429,6 +499,7 @@ class ultimateTicTacToe:
         #YOUR CODE HERE
         bestMove=[]
         gameBoards = []
+        expandedNodes = []
         winner=0
 
         offensive_algo = self.alphabeta
@@ -444,6 +515,8 @@ class ultimateTicTacToe:
             winner = self.checkWinner()
             if winner:
                 break
+
+            self.expandedNodes = 0
 
             if isMax:
                 curt_move = 'X'
@@ -462,7 +535,6 @@ class ultimateTicTacToe:
                     continue
 
                 self.board[x + xd][y + yd] = curt_move
-                self.expandedNodes += 1
                 if curt_algo == self.minimax:
                     new_best = curt_algo(1, xd * 3 + yd, isMax)
                 else:
@@ -483,6 +555,7 @@ class ultimateTicTacToe:
 
             bestMove.append((best_x, best_y))
             gameBoards.append([row[:] for row in self.board])
+            expandedNodes.append(self.expandedNodes)
 
             isMax = not isMax
             curt_board_idx = (best_x - x) * 3 + (best_y - y)
@@ -491,6 +564,8 @@ class ultimateTicTacToe:
                 self.curt_evaluation = self.evaluateDesigned
             else:
                 self.curt_evaluation = self.evaluatePredifined
+
+        print(expandedNodes)
 
         return gameBoards, bestMove, winner
 
@@ -521,8 +596,6 @@ class ultimateTicTacToe:
         bestMove=[]
         gameBoards = []
         winner=0
-
-
 
         curt_board_idx = randint(0, 8)
         isMax = choice([True, False])
@@ -562,7 +635,6 @@ class ultimateTicTacToe:
                     continue
 
                 self.board[x + xd][y + yd] = curt_move
-                self.expandedNodes += 1
                 new_best = self.alphabeta(1, xd * 3 + yd, -float('inf'), float('inf'), isMax)
 
                 self.board[x + xd][y + yd] = '_'
@@ -625,15 +697,15 @@ if __name__=="__main__":
     # else:
     #     print("Tie. No winner:(")
 
-    # win = 0
-    # print("running")
-    # for i in range(10):
-    #     uttt = ultimateTicTacToe()
-    #     if uttt.playGameYourAgent()[2] == -1:
-    #         win += 1
-    #
-    # print("In 10 games, your agent winning times:")
-    # print(win)
+    win = 0
+    print("running")
+    for i in range(100):
+        uttt = ultimateTicTacToe()
+        if uttt.playGameYourAgent()[2] == -1:
+            win += 1
 
-    uttt = ultimateTicTacToe()
-    uttt.playGameHuman()
+    print("In 100 games, your agent winning times:")
+    print(win)
+
+    # uttt = ultimateTicTacToe()
+    # uttt.playGameHuman()
