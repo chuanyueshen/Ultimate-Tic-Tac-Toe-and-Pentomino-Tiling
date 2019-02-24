@@ -600,7 +600,7 @@ class ultimateTicTacToe:
         curt_board_idx = randint(0, 8)
         isMax = choice([True, False])
         players = {True: 'you', False: 'the AI'}
-        self.curt_evaluation = self.evaluatePredifined
+        self.curt_evaluation = self.evaluateDesigned
 
         print('The initial starting local board is the {} board.'.format(self.box_dict[curt_board_idx]))
         print('The initial first player is {}.'.format(players[isMax]))
@@ -697,15 +697,15 @@ if __name__=="__main__":
     # else:
     #     print("Tie. No winner:(")
 
-    win = 0
-    print("running")
-    for i in range(100):
-        uttt = ultimateTicTacToe()
-        if uttt.playGameYourAgent()[2] == -1:
-            win += 1
+    # win = 0
+    # print("running")
+    # for i in range(100):
+    #     uttt = ultimateTicTacToe()
+    #     if uttt.playGameYourAgent()[2] == -1:
+    #         win += 1
+    #
+    # print("In 100 games, your agent winning times:")
+    # print(win)
 
-    print("In 100 games, your agent winning times:")
-    print(win)
-
-    # uttt = ultimateTicTacToe()
-    # uttt.playGameHuman()
+    uttt = ultimateTicTacToe()
+    uttt.playGameHuman()
