@@ -29,8 +29,18 @@ def solve(board, pents):
     for p in pents:
         pents_map[get_pent_label(p)] = get_all_mutations(p)
 
+    # find the maximum pent size
+    max_size = 0
+    for p in pents:
+        size = 0
+        for x, y in np.ndindex(p.shape):
+            if p[x][y] != 0:
+                size += 1
+
+        max_size = max(size, max_size)
+
     # get the result board first
-    _, res_board = dfs(board, board.shape, dict(pents_map), [0])
+    _, res_board = dfs(board, board.shape, dict(pents_map), [0], max_size)
     print(res_board)
 
     # use the board to determine the final layout to return
@@ -62,7 +72,7 @@ def in_bound(board_shape, x, y):
     return 0 <= x < board_shape[0] and 0 <= y < board_shape[1]
 
 
-def dfs(board, board_shape, pents_map, num_call):
+def dfs(board, board_shape, pents_map, num_call, max_size):
     num_call[0] += 1
 
     if not pents_map:
@@ -100,8 +110,11 @@ def dfs(board, board_shape, pents_map, num_call):
                     for x_move, y_move in mutation:
                         new_board[x + x_move][y + y_move] = p
 
-                    # this search mechanism has the ability of forward checking
-                    found, res_board = dfs(new_board, board_shape, new_pents_map, num_call)
+                    # use forward checking
+                    # if forward_checking(np.array(new_board), max_size):
+                    #     continue
+
+                    found, res_board = dfs(new_board, board_shape, new_pents_map, num_call, max_size)
 
                     if found:
                         return True, res_board
@@ -147,6 +160,7 @@ def get_one_mutation(mutation):
 
     return tuple(sorted(mutation))
 
+
 def get_pent_label(pent):
     """
     Returns the label of a pentomino.
@@ -159,3 +173,35 @@ def get_pent_label(pent):
         if plabel != 0:
             break
     return plabel
+
+
+def forward_checking(board, max_size):
+    for x, y in np.ndindex(board.shape):
+        if board[x][y] == 0:
+            vacant_size = bfs(board, x, y)
+
+            if vacant_size < max_size:
+                return True
+
+    return False
+
+
+# bfs is used in forward checking to find the size of a component of '0'
+def bfs(board, x, y):
+    vacant_size = 0
+    q = [(x, y)]
+    board[x][y] = -2
+
+    while q:
+        vacant_size += 1
+        x, y = q.pop()
+
+        for xd, yd in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+            if not 0 <= x + xd < len(board) or not 0 <= y + yd < len(board[0]):
+                continue
+
+            if board[x + xd][y + yd] == 0:
+                q.append((x + xd, y + yd))
+                board[x + xd][y + yd] = -2
+
+    return vacant_size
